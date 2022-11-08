@@ -11,6 +11,7 @@ import { is_other } from "./transaction-types/other";
 import { create_x2y2_transaction, is_x2y2_transaction } from "./transaction-types/x2y2/x2y2_transaction";
 
 export function parse(data: CovalentItem[]) {
+  const startTime = performance.now();
   global.is_parsing_covalent = true;
   const uncaughtData: CovalentItem[] = [];
   const transactions = <Transaction[]>[];
@@ -59,5 +60,7 @@ export function parse(data: CovalentItem[]) {
   //   console.log(JSON.stringify(element));
   // });
   global.is_parsing_covalent = false;
+  const endTime = performance.now();
+  console.log(`Parse Covalent took ${endTime - startTime} milliseconds`);
   return transactions;
 }

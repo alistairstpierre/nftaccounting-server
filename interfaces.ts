@@ -66,22 +66,21 @@ export interface Note {
 
 // Moralis
 export interface MoralisItem {
-  blockNumber: string;
-  blockTimestamp: Date;
-  blockHash: string;
-  transactionHash: string;
-  transactionIndex: number;
-  logIndex: number;
+  block_number: string;
+  block_timestamp: Date;
+  block_hash: string;
+  transaction_hash: string;
+  transaction_index: number;
+  log_index: number;
   value: string;
-  contractType: ContractType;
-  transactionType: TransactionType;
-  tokenAddress: string;
-  tokenId: string;
-  fromAddress: string;
-  toAddress: string;
+  contract_type: ContractType;
+  transaction_type: TransactionType;
+  token_address: string;
+  token_id: string;
+  from_address: string;
+  to_address: string;
   amount: number;
   verified: number;
-  chain: Chain;
 }
 
 export enum Chain {
@@ -90,6 +89,7 @@ export enum Chain {
 
 export enum ContractType {
   Erc721 = "ERC721",
+  Erc1155 = "ERC1155",
 }
 
 export enum TransactionType {

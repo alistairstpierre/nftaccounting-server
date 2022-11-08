@@ -4,7 +4,7 @@ declare global {
   var is_fetching_moralis: boolean;
   var is_fetching_opensea: boolean;
   var is_parsing_covalent: boolean;
-  var moralis_call_count: number;
+  var alchemy_call_amount: number;
   var walletAddress: string;
 }
   
