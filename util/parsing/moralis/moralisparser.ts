@@ -18,10 +18,10 @@ export function moralis_parse(data: MoralisItem[], transactions: Transaction[]) 
               count++;
             }
           }
-          if(count < covalent_occurances.length){
+          if (count < covalent_occurances.length) {
             tx.token_ID = moralis_occurances[count]?.token_id;
           }
-        }else {
+        } else {
           tx.token_ID = moralis_occurances[0]?.token_id;
         }
         // save 1 transaction to the transactions array

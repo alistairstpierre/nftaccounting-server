@@ -68,9 +68,5 @@ export function trades_parse(transactions: Transaction[]) {
   });
   const endTime = performance.now();
   console.log(`Parse Trades took ${endTime - startTime} milliseconds`);
-  // store.setListings(listings);
-  // store.setFailures(failures);
-  // store.setCancels(cancels);
-  // store.setOpenseaExpenses(opensea_expenses);
-  return trades;
+  return {trades, listings, failures, cancels, opensea_expenses};
 }

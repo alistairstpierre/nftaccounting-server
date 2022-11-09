@@ -18,7 +18,6 @@ const PORT = 8080;
 dotenv.config();
 app.use(express.json());
 app.use(cors());
-global.alchemy_call_amount = 0;
 
 // 🏚️ Default Route
 // This is the Default Route of the API
@@ -27,6 +26,7 @@ app.get("/", async (req: Request, res: Response) => {
   global.is_fetching_moralis = false;
   global.is_fetching_opensea = false;
   global.is_parsing_covalent = false;
+  global.alchemy_call_amount = 0;
   global.walletAddress = "0x73CD457e12f5fa160261FEf96C63CA4cA0478b2F".toLowerCase();
   const startTime = performance.now();
   const added: any = await Promise.all([get_covalent_data(), get_moralis_data()]);
@@ -49,7 +49,7 @@ app.get("/", async (req: Request, res: Response) => {
     });
   });
   const preParse = moralis_parse(moralis, covalent);
-  const trades = trades_parse(preParse);
+  const trades = trades_parse(preParse).trades;
   const tradesWithUrls = await get_image_urls(trades);
   res.json(tradesWithUrls);
 });

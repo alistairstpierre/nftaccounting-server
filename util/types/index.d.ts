@@ -6,6 +6,7 @@ declare global {
   var is_parsing_covalent: boolean;
   var alchemy_call_amount: number;
   var walletAddress: string;
+  var request_queue: Array;
 }
   
 export {};

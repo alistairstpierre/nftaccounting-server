@@ -6,65 +6,61 @@ interface LooseObject {
 }
 
 export const get_image_urls = async (trades: Trade[]) => {
+  // organize data into a format that alchemy can accept
+  const startTime = performance.now();
   const nfts: LooseObject = {};
   trades.forEach((element) => {
     if (element.contract && element.contract.toLowerCase() == "erc721") {
-      if (element.project && element.token_id)
-        nfts[`${element.project}${element.token_id}`] = { contractAddress: element.project_address, tokenId: element.token_id };
+      if (element.project_address && element.token_id)
+        nfts[`${element.project_address}${element.token_id}`] = { contractAddress: element.project_address, tokenId: element.token_id };
     } else {
-      if (element.project && !nfts.hasOwnProperty(element.project)) {
-        nfts[element.project] = { contractAddress: element.project_address, tokenId: element.token_id };
+      if (element.project_address && !nfts.hasOwnProperty(element.project_address)) {
+        nfts[element.project_address] = { contractAddress: element.project_address, tokenId: element.token_id };
       }
     }
   });
-  // send all the nfts to alchemy params
-  const data = await fetch_alchemy_meta_data(nfts);
-  console.log(data[0]);
+  let data = await fetch_alchemy_meta_data(nfts);
+  data = data.flat();
+  // find the image url for each nft and add it to the trade
+  // check to see if it has an editable url or not, if not just use the collection url for now.
   trades.forEach((element) => {
     if (element.project_address && element.token_id) {
       const nft = data.find((x: any) => x.id.tokenId == element.token_id && x.contract.address == element.project_address);
-      if (nft && nft.media[0].gateway.includes("alchemyapi")) {
-        element.img_url = nft.media[0].gateway;
-      } else {
-        element.img_url = nft.contractMetadata.openSea.imageUrl;
+      if (nft) {
+        if (nft.media[0].gateway.includes("alchemyapi")) {
+          element.img_url = editAlchemyUrl(nft.media[0].gateway, 40);
+        } 
+        // else if (
+        //   nft.media[0].gateway.includes("lh3.googleusercontent.com") ||
+        //   nft.media[0].gateway.includes("openseauserdata.com") ||
+        //   nft.media[0].gateway.includes("i.seadn.io") ||
+        //   nft.media[0].gateway.includes("ipfs.io")
+        // ) {
+        //   element.img_url = nft.media[0].gateway;
+        // } 
+        else {
+          element.img_url = editOpenseaUrl(nft.contractMetadata.openSea.imageUrl, 250);
+        }
+        if (!element.project) element.project = nft.contractMetadata.name;
       }
     }
   });
+  const endTime = performance.now();
+  console.log(`Fetch images took ${endTime - startTime} milliseconds`);
   return trades;
 };
 
-// export const get_image_urls = async (trades: Trade[]) => {
-//   console.log("getting image urls");
-//   const sortedTrades: LooseObject = {};
-//   const updatedTrades: Trade[] = [];
-//   trades.forEach((trade) => {
-//     if (trade.project != undefined) {
-//       if (!sortedTrades.hasOwnProperty(trade.project)) {
-//         sortedTrades[trade.project] = [];
-//       }
-//       sortedTrades[trade.project].push(trade);
-//     }
-//   });
-//   for (const [key, value] of Object.entries(sortedTrades)) {
-//     if (value[0].contract.toLowerCase() == "erc1155") {
-//       // fetch 1 image for all trades of this type of project
-//     } else {
-//       for (let i = 0; i < value.length; i++) {
-//         await alchemy_call_amount_check();
-//         // add nfts to a batch call
-//         if (value[i].token_id && value[i].project_address) {
-//           console.log(value[i].project_address, value[i].token_id);
-//           const metadata = fetch_alchemy_meta_data(value[i].project_address, value[i].token_id).then((response) => {
-//             if (response.media[0].gateway.includes("alchemyapi")) value[i].img_url = response.media[0].gateway;
-//             else value[i].img_url = response.contractMetadata.openSea.imageUrl;
-//             updatedTrades.push(value[i]);
-//           });
-//         }
-//       }
-//     }
-//   }
-//   return Promise.all(updatedTrades);
-// };
+const editOpenseaUrl = (url: string, size: number) => {
+  const split = url.split("?w=500&auto=format");
+  split[1] = `?w=${size}&auto=format`;
+  return split.join("");
+};
+
+const editAlchemyUrl = (url: string, size: number) => {
+  const split = url.split("https://res.cloudinary.com/alchemyapi/image/upload/");
+  split[1] = `w_${size},h_${size}/` + split[1];
+  return split.join("https://res.cloudinary.com/alchemyapi/image/upload/");
+};
 
 const fetch_alchemy_meta_data = async (nfts: LooseObject) => {
   const apiKey = `${process.env.ALCHEMY_API_KEY}`;
@@ -79,13 +75,10 @@ const fetch_alchemy_meta_data = async (nfts: LooseObject) => {
   };
 
   for (let i = 0; i < Object.values(nfts).length; i += 100) {
+    await alchemy_call_amount_check();
     const batch = Object.values(nfts).slice(i, i + 100);
-    const response = await axios.post(baseURL, { tokens: batch }, options).then((res) => {
-        res.data.forEach((element:any) => {
-            data.push(element)
-        });
-        
-    });
+    const response = axios.post(baseURL, { tokens: batch }, options).then((res) => res.data);
+    data.push(response);
   }
   return Promise.all(data);
 };
