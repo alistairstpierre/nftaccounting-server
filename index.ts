@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv";
 import cors from "cors";
-import express, { Request, Response } from "express";
+import express, { query, Request, Response } from "express";
 import Broker from "./services/rabbitMQ";
 import publishToExchange from "./services/queueWorkers/producer";
 
@@ -27,9 +27,9 @@ app.use(async (req: any, res, next) => {
 
 // 🏚️ Default Route
 // This is the Default Route of the API
-app.get("/", async (req: any, res: Response) => {
+app.get("/data", async (req: any, res: Response) => {
   try{
-    await publishToExchange(req.RMQProducer, { message: "0x73CD457e12f5fa160261FEf96C63CA4cA0478b2F", routingKey: "wallet-history" });
+    await publishToExchange(req.RMQProducer, { message: JSON.stringify({wallet: req.query.wallet}), routingKey: "wallet-history" });
     res.status(200).send("Data sent successfully!");
   } catch (error) {
     res.status(400).send(`Data not sent!`);
