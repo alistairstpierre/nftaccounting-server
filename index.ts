@@ -30,9 +30,9 @@ app.use(async (req: any, res, next) => {
 app.get("/data", async (req: any, res: Response) => {
   try{
     await publishToExchange(req.RMQProducer, { message: JSON.stringify({wallet: req.query.wallet}), routingKey: "wallet-history" });
-    res.status(200).send("Data sent successfully!");
+    res.status(200).send({status: "success"});
   } catch (error) {
-    res.status(400).send(`Data not sent!`);
+    res.status(400).send({status: "failed"});
   }
 });
 
