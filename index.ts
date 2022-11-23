@@ -3,6 +3,7 @@ import cors from "cors";
 import express, { query, Request, Response } from "express";
 import Broker from "./services/rabbitMQ";
 import publishToExchange from "./services/queueWorkers/producer";
+import ethers from "ethers";
 
 // const prisma = new PrismaClient();
 const app = express();
@@ -29,8 +30,12 @@ app.use(async (req: any, res, next) => {
 // This is the Default Route of the API
 app.get("/data", async (req: any, res: Response) => {
   try{
-    await publishToExchange(req.RMQProducer, { message: JSON.stringify({wallet: req.query.wallet}), routingKey: "wallet-history" });
-    res.status(200).send({status: "success"});
+    if(ethers.utils.isAddress(req.query.address)){
+      await publishToExchange(req.RMQProducer, { message: JSON.stringify({wallet: req.query.wallet}), routingKey: "wallet-history" });
+      res.status(200).send({status: "success"});
+    } else {
+      res.status(400).send({status: "bad error"});
+    }
   } catch (error) {
     res.status(400).send({status: "failed"});
   }
