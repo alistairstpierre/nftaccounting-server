@@ -3,7 +3,7 @@ import cors from "cors";
 import express, { query, Request, Response } from "express";
 import Broker from "./services/rabbitMQ";
 import publishToExchange from "./services/queueWorkers/producer";
-import ethers from "ethers";
+import web3 from "web3";
 
 // const prisma = new PrismaClient();
 const app = express();
@@ -29,15 +29,22 @@ app.use(async (req: any, res, next) => {
 // 🏚️ Default Route
 // This is the Default Route of the API
 app.get("/data", async (req: any, res: Response) => {
-  try{
-    if(ethers.utils.isAddress(req.query.address)){
-      await publishToExchange(req.RMQProducer, { message: JSON.stringify({wallet: req.query.wallet}), routingKey: "wallet-history" });
-      res.status(200).send({status: "success"});
-    } else {
-      res.status(400).send({status: "bad error"});
+  let address = null;
+  try {
+    address = web3.utils.toChecksumAddress(req.query.wallet);
+  } catch (error) {
+    return res.status(400).json({ error: "Invalid wallet address" });
+  }
+  try {
+    if(address){
+      await publishToExchange(req.RMQProducer, {
+        message: JSON.stringify({ wallet: address }),
+        routingKey: "wallet-history",
+      });
+      res.status(200).send({ status: "success" });
     }
   } catch (error) {
-    res.status(400).send({status: "failed"});
+    res.status(400).send({ status: "failed" });
   }
 });
 
